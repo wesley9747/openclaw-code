@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>双色球彩票管理</title>
+    {% if ENV == 'production' %}
+    <script src="https://open.feishu.cn/plugin/feishu-platform-js-sdk.js"></script>
+    {% endif %}
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #4A90D9;
+            --primary-dark: #357ABD;
+            --secondary: #6C5CE7;
+            --success: #00B894;
+            --warning: #FDCB6E;
+            --danger: #E74C3C;
+            --red-ball: #E53935;
+            --blue-ball: #1E88E5;
+            --background: #F5F7FA;
+            --card-bg: #FFFFFF;
+            --text-primary: #2D3436;
+            --text-secondary: #636E72;
+            --border: #DFE6E9;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding-bottom: 70px;
+        }
+
+        /* 头部 */
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 { font-size: 18px; font-weight: 600; }
+
+        /* 底部导航 */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            z-index: 100;
+        }
+
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 11px;
+            cursor: pointer;
+            padding: 4px 12px;
+        }
+
+        .tab-item.active { color: var(--primary); }
+        .tab-item i { font-size: 20px; margin-bottom: 2px; }
+
+        /* 页面 */
+        .page { display: none; padding: 12px; }
+        .page.active { display: block; }
+
+        /* 卡片 */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        /* 按钮 */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            gap: 6px;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-secondary { background: var(--secondary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+        .btn-block { width: 100%; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+        /* 彩票球 */
+        .lottery-balls { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+        .ball { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 11px; }
+        .ball.red { background: var(--red-ball); }
+        .ball.blue { background: var(--blue-ball); }
+        .ball.plus { background: transparent; color: var(--text-secondary); font-size: 16px; }
+
+        /* 统计 */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .stat-item { text-align: center; padding: 12px 6px; background: var(--background); border-radius: 8px; }
+        .stat-value { font-size: 20px; font-weight: 700; color: var(--primary); }
+        .stat-label { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+        /* 输入 */
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; }
+        .input-group input, .input-group textarea {
+            width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px;
+        }
+
+        /* 号码选择器 */
+        .number-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 8px; }
+        .number-btn {
+            width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--border);
+            background: var(--card-bg); font-size: 13px; cursor: pointer;
+        }
+        .number-btn.selected { background: var(--primary); border-color: var(--primary); color: white; }
+        .number-btn.blue.selected { background: var(--blue-ball); border-color: var(--blue-ball); }
+
+        /* 记录列表 */
+        .record-item { background: var(--card-bg); border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .record-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .record-period { font-weight: 600; font-size: 14px; }
+        .record-date { font-size: 11px; color: var(--text-secondary); }
+        .record-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 10px; }
+
+        /* 空状态 */
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-secondary); }
+        .empty-state i { font-size: 48px; opacity: 0.4; display: block; margin-bottom: 12px; }
+
+        /* 预测结果 */
+        .prediction-result { background: linear-gradient(135deg, #E8F4FD, #F0EBFB); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+        .prediction-number { display: flex; justify-content: center; gap: 6px; margin: 12px 0; flex-wrap: wrap; }
+        .confidence-bar { height: 6px; background: var(--border); border-radius: 3px; margin-top: 10px; overflow: hidden; }
+        .confidence-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 3px; }
+
+        /* 弹窗 */
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 16px; }
+        .modal.active { display: flex; }
+        .modal-content { background: var(--card-bg); border-radius: 12px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { padding: 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 16px; }
+        .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-secondary); }
+        .modal-body { padding: 14px; }
+        .modal-footer { padding: 14px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+        /* 提示 */
+        .toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: var(--text-primary); color: white; padding: 10px 20px; border-radius: 8px; font-size: 13px; z-index: 2000; opacity: 0; transition: opacity 0.3s; }
+        .toast.show { opacity: 1; }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+
+        /* 加载 */
+        .loading { text-align: center; padding: 30px; color: var(--text-secondary); }
+        .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 12px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* 匹配标签 */
+        .match-tag { font-size: 11px; padding: 3px 8px; border-radius: 4px; background: var(--background); color: var(--text-secondary); margin-right: 6px; }
+        .match-tag.win { background: #E8F5E9; color: var(--success); }
+    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+    <!-- 头部 -->
+    <header class="header">
+        <h1>🎱 双色球彩票管理</h1>
+    </header>
+
+    <!-- 首页 -->
+    <div id="page-home" class="page active">
+        <!-- 统计 -->
+        <div class="card">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-total">0</div>
+                    <div class="stat-label">购买记录</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-wins">0</div>
+                    <div class="stat-label">中奖次数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-amount">0</div>
+                    <div class="stat-label">总奖金(元)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="card" style="display: flex; gap: 10px;">
+            <button class="btn btn-primary btn-block" onclick="openAddModal()">
+                <i class="bi bi-plus-lg"></i> 添加记录
+            </button>
+            <button class="btn btn-outline btn-block" onclick="syncFromFeishu()">
+                <i class="bi bi-cloud-download"></i> 同步
+            </button>
+        </div>
+
+        <!-- 记录列表 -->
+        <div id="record-list"></div>
+        <div id="empty-state" class="empty-state" style="display: none;">
+            <i class="bi bi-receipt"></i>
+            <p>暂无记录，点击添加按钮记录彩票</p>
+        </div>
+    </div>
+
+    <!-- 预测页 -->
+    <div id="page-prediction" class="page">
+        <!-- 冷热号 -->
+        <div class="card">
+            <div style="font-weight: 600; margin-bottom: 10px;">📊 冷热号统计</div>
+            <div style="display: flex; gap: 16px; font-size: 12px;">
+                <div style="flex: 1;">
+                    <div style="color: var(--danger); margin-bottom: 6px;">🔥 热门红球</div>
+                    <div id="hot-red-balls" class="lottery-balls"></div>
+                </div>
+                <div style="flex: 1;">
+                    <div style="color: var(--blue-ball); margin-bottom: 6px;">❄️ 冷门红球</div>
+                    <div id="cold-red-balls" class="lottery-balls"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 预测按钮 -->
+        <div class="card" style="display: flex; gap: 10px;">
+            <button class="btn btn-primary btn-block" onclick="predict('local')">
+                <i class="bi bi-calculator"></i> 本地算法
+            </button>
+            <button class="btn btn-secondary btn-block" onclick="predict('ai')">
+                <i class="bi bi-stars"></i> AI推荐
+            </button>
+        </div>
+
+        <!-- 预测结果 -->
+        <div id="prediction-result" style="display: none;">
+            <div class="card">
+                <div style="font-weight: 600; margin-bottom: 10px;">🎯 推荐号码</div>
+                <div class="prediction-number" id="recommended-numbers"></div>
+                <div style="font-size: 12px; color: var(--success);" id="confidence-label">置信度 75%</div>
+                <div class="confidence-bar"><div class="confidence-fill" id="confidence-bar" style="width: 75%"></div></div>
+            </div>
+            <div class="card">
+                <div style="font-weight: 600; margin-bottom: 8px;">📝 分析说明</div>
+                <div id="analysis-text" style="color: var(--text-secondary); font-size: 13px; line-height: 1.7;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设置页 -->
+    <div id="page-settings" class="page">
+        <div class="card">
+            <div style="font-weight: 600; margin-bottom: 12px;">⚙️ 飞书设置</div>
+            <div class="input-group">
+                <label>应用 App ID</label>
+                <input type="text" id="app-id" placeholder="飞书应用 ID">
+            </div>
+            <div class="input-group">
+                <label>应用 App Secret</label>
+                <input type="password" id="app-secret" placeholder="飞书应用密钥">
+            </div>
+            <button class="btn btn-outline btn-block" onclick="saveConfig()">
+                <i class="bi bi-check-lg"></i> 保存配置
+            </button>
+        </div>
+
+        <div class="card">
+            <div style="font-weight: 600; margin-bottom: 12px;">ℹ️ 关于</div>
+            <div style="font-size: 13px; color: var(--text-secondary);">
+                <p>版本: 1.0.0</p>
+                <p style="margin-top: 6px;">飞书内嵌 Web 应用</p>
+                <p style="margin-top: 6px;">作者: 大龙虾 🦞</p>
+            </div>
+        </div>
+
+        <div class="card" style="background: #FFF3CD; border-left: 4px solid var(--warning);">
+            <div style="font-size: 12px; color: #856404;">
+                <strong>⚠️ 免责声明</strong>
+                <p style="margin-top: 6px;">彩票预测仅供参考娱乐，不构成投注建议。请理性购彩！</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部导航 -->
+    <nav class="tab-bar">
+        <div class="tab-item active" data-page="home"><i class="bi bi-house"></i><span>首页</span></div>
+        <div class="tab-item" data-page="prediction"><i class="bi bi-stars"></i><span>预测</span></div>
+        <div class="tab-item" data-page="settings"><i class="bi bi-gear"></i><span>设置</span></div>
+    </nav>
+
+    <!-- 添加记录弹窗 -->
+    <div id="modal-add" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加记录</h3>
+                <button class="modal-close" onclick="closeModal('modal-add')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label>期号</label>
+                    <input type="text" id="input-period" placeholder="例如: 2024050">
+                </div>
+                <div class="input-group">
+                    <label>红球 (已选 <span id="red-count">0</span>/6)</label>
+                    <div class="number-grid" id="red-ball-selector"></div>
+                </div>
+                <div class="input-group">
+                    <label>蓝球 (已选 <span id="blue-count">0</span>/1)</label>
+                    <div class="number-grid" id="blue-ball-selector"></div>
+                </div>
+                <div class="input-group">
+                    <label>备注</label>
+                    <textarea id="input-remarks" rows="2" placeholder="可选"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modal-add')">取消</button>
+                <button class="btn btn-primary" onclick="saveRecord()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示 -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // ============ 状态 ============
+        let records = [];
+        let selectedRedBalls = new Set();
+        let selectedBlueBall = null;
+        let editingId = null;
+
+        // ============ 飞书环境检测 ============
+        const isInFeishu = window !== window.parent;
+        
+        // ============ 工具函数 ============
+        function padNum(n) { return String(n).padStart(2, '0'); }
+        
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2,'0')}`;
+        }
+
+        function showToast(message, type = '') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show ' + type;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // 点击弹窗外部关闭
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', e => {
+                if (e.target === modal) closeModal(modal.id);
+            });
+        });
+
+        // ============ 页面导航 ============
+        document.querySelectorAll('.tab-item').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const page = tab.dataset.page;
+                document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(`page-${page}`).classList.add('active');
+                
+                if (page === 'home') renderRecords();
+                if (page === 'prediction') loadPredictionData();
+            });
+        });
+
+        // ============ 首页逻辑 ============
+        async function loadRecords() {
+            try {
+                const res = await fetch('/api/records');
+                const data = await res.json();
+                records = data.data || [];
+                renderRecords();
+            } catch (e) {
+                // 离线模式用本地存储
+                const local = localStorage.getItem('lottery_records');
+                records = local ? JSON.parse(local) : [];
+                renderRecords();
+            }
+        }
+
+        function renderRecords() {
+            const list = document.getElementById('record-list');
+            const empty = document.getElementById('empty-state');
+            
+            // 统计
+            const wins = records.filter(r => r.isWin).length;
+            const amount = records.reduce((s, r) => s + (r.prizeAmount || 0), 0);
+            document.getElementById('stat-total').textContent = records.length;
+            document.getElementById('stat-wins').textContent = wins;
+            document.getElementById('stat-amount').textContent = amount;
+            
+            if (records.length === 0) {
+                list.style.display = 'none';
+                empty.style.display = 'block';
+                return;
+            }
+            
+            list.style.display = 'block';
+            empty.style.display = 'none';
+            
+            list.innerHTML = records.slice(0, 10).map(record => `
+                <div class="record-item">
+                    <div class="record-header">
+                        <span class="record-period">第 ${record.period} 期</span>
+                        <span class="record-date">${formatDate(record.createdAt)}</span>
+                    </div>
+                    <div class="lottery-balls">
+                        ${(record.redBalls || []).sort((a,b) => a-b).map(n => `<span class="ball red">${padNum(n)}</span>`).join('')}
+                        <span class="ball plus">+</span>
+                        <span class="ball blue">${padNum(record.blueBall)}</span>
+                    </div>
+                    ${record.isWin ? `<div style="margin-top: 8px;"><span class="match-tag win">🎉 ${record.prizeLevel} ${record.prizeAmount}元</span></div>` : ''}
+                    <div class="record-actions">
+                        <button class="btn btn-sm btn-danger" onclick="deleteRecord(${record.id})">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ============ 添加/编辑记录 ============
+        function openAddModal(record = null) {
+            editingId = record ? record.id : null;
+            selectedRedBalls = new Set(record ? record.redBalls : []);
+            selectedBlueBall = record ? record.blueBall : null;
+            document.getElementById('input-period').value = record ? record.period : generatePeriod();
+            document.getElementById('input-remarks').value = record ? record.remarks : '';
+            updateNumberSelectors();
+            document.getElementById('modal-add').classList.add('active');
+        }
+
+        function generatePeriod() {
+            const now = new Date();
+            return `${now.getFullYear()}${String(Math.ceil(now.getDate() / 7)).padStart(2, '0')}`;
+        }
+
+        function updateNumberSelectors() {
+            const redGrid = document.getElementById('red-ball-selector');
+            redGrid.innerHTML = '';
+            for (let i = 1; i <= 33; i++) {
+                const btn = document.createElement('button');
+                btn.className = `number-btn ${selectedRedBalls.has(i) ? 'selected' : ''}`;
+                btn.textContent = padNum(i);
+                btn.onclick = () => toggleRedBall(i);
+                redGrid.appendChild(btn);
+            }
+            
+            const blueGrid = document.getElementById('blue-ball-selector');
+            blueGrid.innerHTML = '';
+            for (let i = 1; i <= 16; i++) {
+                const btn = document.createElement('button');
+                btn.className = `number-btn blue ${selectedBlueBall === i ? 'selected' : ''}`;
+                btn.textContent = padNum(i);
+                btn.onclick = () => toggleBlueBall(i);
+                blueGrid.appendChild(btn);
+            }
+            
+            document.getElementById('red-count').textContent = selectedRedBalls.size;
+            document.getElementById('blue-count').textContent = selectedBlueBall ? 1 : 0;
+        }
+
+        function toggleRedBall(num) {
+            if (selectedRedBalls.has(num)) selectedRedBalls.delete(num);
+            else if (selectedRedBalls.size < 6) selectedRedBalls.add(num);
+            updateNumberSelectors();
+        }
+
+        function toggleBlueBall(num) {
+            selectedBlueBall = selectedBlueBall === num ? null : num;
+            updateNumberSelectors();
+        }
+
+        async function saveRecord() {
+            const period = document.getElementById('input-period').value.trim();
+            const remarks = document.getElementById('input-remarks').value.trim();
+            
+            if (!period) return showToast('请输入期号', 'error');
+            if (selectedRedBalls.size !== 6) return showToast('请选择6个红球', 'error');
+            if (!selectedBlueBall) return showToast('请选择1个蓝球', 'error');
+
+            const recordData = {
+                period,
+                redBalls: Array.from(selectedRedBalls),
+                blueBall: selectedBlueBall,
+                remarks
+            };
+
+            try {
+                const res = await fetch('/api/records', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(recordData)
+                });
+                const data = await res.json();
+                if (data.code === 0) {
+                    showToast('保存成功', 'success');
+                    // 离线模式也保存到本地
+                    records.unshift({ ...recordData, id: Date.now(), createdAt: new Date().toISOString() });
+                    localStorage.setItem('lottery_records', JSON.stringify(records));
+                }
+            } catch (e) {
+                // 离线模式
+                records.unshift({ ...recordData, id: Date.now(), createdAt: new Date().toISOString() });
+                localStorage.setItem('lottery_records', JSON.stringify(records));
+                showToast('保存成功(离线)', 'success');
+            }
+            
+            closeModal('modal-add');
+            renderRecords();
+        }
+
+        async function deleteRecord(id) {
+            if (!confirm('确定删除？')) return;
+            try {
+                await fetch(`/api/records/${id}`, { method: 'DELETE' });
+            } catch (e) {}
+            records = records.filter(r => r.id !== id);
+            localStorage.setItem('lottery_records', JSON.stringify(records));
+            renderRecords();
+            showToast('已删除');
+        }
+
+        // ============ 预测功能 ============
+        async function loadPredictionData() {
+            try {
+                const res = await fetch('/api/draws');
+                const data = await res.json();
+                const draws = data.data || [];
+                
+                const redCount = {};
+                draws.forEach(d => d.redBalls.forEach(n => redCount[n] = (redCount[n] || 0) + 1));
+                
+                const sorted = Object.entries(redCount).map(([n, c]) => ({ num: parseInt(n), count: c })).sort((a, b) => b.count - a.count);
+                
+                document.getElementById('hot-red-balls').innerHTML = sorted.slice(0, 6).map(n => `<span class="ball red">${padNum(n.num)}</span>`).join('');
+                document.getElementById('cold-red-balls').innerHTML = sorted.slice().reverse().slice(0, 6).map(n => `<span class="ball red" style="opacity:0.5">${padNum(n.num)}</span>`).join('');
+            } catch (e) {
+                document.getElementById('hot-red-balls').innerHTML = '<span style="font-size:12px;color:var(--text-secondary)">加载中...</span>';
+            }
+        }
+
+        async function predict(method) {
+            showToast('预测中...');
+            try {
+                const res = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ method })
+                });
+                const data = await res.json();
+                const pred = data.data;
+                
+                if (pred) {
+                    document.getElementById('prediction-result').style.display = 'block';
+                    document.getElementById('recommended-numbers').innerHTML = `
+                        <div class="lottery-balls">
+                            ${pred.redBalls.map(n => `<span class="ball red">${padNum(n)}</span>`).join('')}
+                            <span class="ball plus">+</span>
+                            <span class="ball blue">${padNum(pred.blueBall)}</span>
+                        </div>
+                    `;
+                    document.getElementById('confidence-bar').style.width = pred.confidence + '%';
+                    document.getElementById('confidence-label').textContent = '置信度 ' + pred.confidence + '%';
+                    document.getElementById('analysis-text').textContent = pred.analysis || '基于数据分析得出';
+                    showToast('预测完成', 'success');
+                }
+            } catch (e) {
+                showToast('预测失败', 'error');
+            }
+        }
+
+        // ============ 同步 ============
+        async function syncFromFeishu() {
+            showToast('同步中...');
+            try {
+                const res = await fetch('/api/sync', { method: 'POST' });
+                const data = await res.json();
+                await loadRecords();
+                showToast(`同步完成，新增 ${data.count || 0} 条`, 'success');
+            } catch (e) {
+                showToast('同步失败，检查网络', 'error');
+            }
+        }
+
+        // ============ 设置 ============
+        function saveConfig() {
+            const appId = document.getElementById('app-id').value;
+            const appSecret = document.getElementById('app-secret').value;
+            localStorage.setItem('feishu_app_id', appId);
+            localStorage.setItem('feishu_app_secret', appSecret);
+            showToast('配置已保存', 'success');
+        }
+
+        // 加载配置
+        document.getElementById('app-id').value = localStorage.getItem('feishu_app_id') || '';
+        document.getElementById('app-secret').value = localStorage.getItem('feishu_app_secret') || '';
+
+        // ============ 初始化 ============
+        document.addEventListener('DOMContentLoaded', () => {
+            // 尝试加载离线数据
+            const local = localStorage.getItem('lottery_records');
+            if (local) {
+                records = JSON.parse(local);
+            }
+            renderRecords();
+            updateNumberSelectors();
+            
+            console.log('🎱 飞书彩票应用已加载', isInFeishu ? '- 飞书内嵌环境' : '- 浏览器环境');
+        });
+    </script>
+</body>
+</html>
