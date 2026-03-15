@@ -1,242 +1,158 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>双色球彩票管理</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>彩票智查 - 原型预览</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+      background: #f5f6f7;
+      padding: 32px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      font-size: 28px;
+      margin-bottom: 8px;
+      color: #3370ff;
+    }
+    .subtitle {
+      text-align: center;
+      color: #646666;
+      margin-bottom: 32px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .card h3 {
+      font-size: 16px;
+      margin-bottom: 12px;
+      color: #1d1e20;
+    }
+    .card p {
+      font-size: 14px;
+      color: #646666;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+    .card a {
+      display: inline-block;
+      padding: 8px 16px;
+      background: #3370ff;
+      color: white;
+      text-decoration: none;
+      border-radius: 20px;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    .card a:hover { background: #2b5eb3; }
+    .note {
+      background: #fff9e6;
+      border-left: 4px solid #ff991f;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 32px;
+      font-size: 14px;
+      color: #646666;
+    }
+    .note strong { color: #ff991f; }
+  </style>
 </head>
 <body>
-    <header class="header">
-        <h1>🎱 双色球彩票管理</h1>
-        <div class="subtitle">记录每一次期待</div>
-    </header>
+  <h1>🎱 彩票智查</h1>
+  <p class="subtitle">飞书应用 + 后端版 - 交互原型预览</p>
 
-    <div id="page-home" class="page active">
-        <div class="card">
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-value" id="stat-total">0</div>
-                    <div class="stat-label">购买记录</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="stat-wins">0</div>
-                    <div class="stat-label">中奖次数</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="stat-amount">0</div>
-                    <div class="stat-label">总奖金(元)</div>
-                </div>
-            </div>
-        </div>
+  <div class="note">
+    <strong>🖼️ 原型说明：</strong><br>
+    这里的 8 个 HTML 文件是静态交互原型，展示了完整的用户流程和 UI 设计。<br>
+    每个页面都可以直接在浏览器中打开，体验移动端布局和基础交互。<br>
+    <br>
+    <strong>🔧 技术栈（实际开发）：</strong><br>
+    • 前端：Vue 3 + Vant 4<br>
+    • 后端：FastAPI + PostgreSQL<br>
+    • 认证：飞书 OAuth 2.0<br>
+    • OCR：百度智能云 API<br>
+  </div>
 
-        <div class="card">
-            <div style="display: flex; gap: 12px;">
-                <button class="btn btn-primary btn-block" onclick="App.openAddModal()">
-                    <i class="bi bi-plus-lg"></i> 添加记录
-                </button>
-                <button class="btn btn-outline btn-block" onclick="App.startCamera()">
-                    <i class="bi bi-camera"></i> 拍照识别
-                </button>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <span class="card-title">最近记录</span>
-                <button class="btn btn-sm btn-outline" onclick="App.syncToFeishu()">
-                    <i class="bi bi-cloud-upload"></i> 同步
-                </button>
-            </div>
-            <div id="record-list" class="record-list"></div>
-            <div id="empty-state" class="empty-state" style="display: none;">
-                <i class="bi bi-receipt"></i>
-                <h3>暂无记录</h3>
-                <p>点击上方添加按钮记录您的彩票</p>
-            </div>
-        </div>
+  <div class="grid">
+    <div class="card">
+      <h3>1️⃣ 登录页</h3>
+      <p>飞书 OAuth 登录授权，简洁的授权入口，配色飞书蓝渐变背景。</p>
+      <a href="01-login.html" target="_blank">预览</a>
     </div>
 
-    <div id="page-prediction" class="page">
-        <div class="card">
-            <div class="card-header">
-                <span class="card-title">📊 冷热号统计</span>
-                <span class="stat-label" id="draw-count">基于 0 期</span>
-            </div>
-            <div style="display: flex; gap: 24px;">
-                <div style="flex: 1;">
-                    <div style="color: var(--danger); font-weight: 500; margin-bottom: 8px;">🔥 热门红球</div>
-                    <div id="hot-red-balls" class="lottery-balls"></div>
-                </div>
-                <div style="flex: 1;">
-                    <div style="color: var(--blue-ball); font-weight: 500; margin-bottom: 8px;">❄️ 冷门红球</div>
-                    <div id="cold-red-balls" class="lottery-balls"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div style="display: flex; gap: 12px;">
-                <button class="btn btn-primary btn-block" onclick="App.predictWithLocal()">
-                    <i class="bi bi-calculator"></i> 本地算法
-                </button>
-                <button class="btn btn-secondary btn-block" onclick="App.predictWithAI()">
-                    <i class="bi bi-stars"></i> AI智能推荐
-                </button>
-            </div>
-        </div>
-
-        <div id="prediction-result" style="display: none;">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">🎯 推荐号码</span>
-                    <span id="confidence-label" style="font-size: 12px; color: var(--success);">置信度 75%</span>
-                </div>
-                <div id="recommended-numbers"></div>
-                <div class="confidence-bar">
-                    <div class="confidence-fill" id="confidence-bar" style="width: 75%"></div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-title" style="margin-bottom: 12px;">📝 分析说明</div>
-                <div id="analysis-text" style="color: var(--text-secondary); font-size: 14px; line-height: 1.8;"></div>
-            </div>
-        </div>
+    <div class="card">
+      <h3>2️⃣ 首页</h3>
+      <p>年度统计卡片 + 快捷操作按钮 + 最近投注记录列表，底部导航栏。</p>
+      <a href="02-home.html" target="_blank">预览</a>
     </div>
 
-    <div id="page-settings" class="page">
-        <div class="card">
-            <div class="card-title" style="margin-bottom: 16px;">🔄 同步设置</div>
-            <div class="input-group">
-                <label>飞书多维表格</label>
-                <input type="text" id="feishu-url" placeholder="粘贴飞书表格链接" value="https://f39ukpc92q.feishu.cn/base/LpDqb4WOxak09Hse2eScWhlhnQh">
-            </div>
-            <button class="btn btn-outline btn-block" onclick="App.loadFeishuData()">
-                <i class="bi bi-download"></i> 从飞书导入
-            </button>
-        </div>
-
-        <div class="card">
-            <div class="card-title" style="margin-bottom: 16px;">📊 数据管理</div>
-            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                <button class="btn btn-outline btn-block" onclick="App.exportData()">
-                    <i class="bi bi-download"></i> 导出数据
-                </button>
-                <button class="btn btn-danger btn-block" onclick="App.clearAllData()">
-                    <i class="bi bi-trash"></i> 清空数据
-                </button>
-            </div>
-            <div id="data-stats" style="font-size: 12px; color: var(--text-secondary);"></div>
-        </div>
-
-        <div class="card">
-            <div class="card-title" style="margin-bottom: 16px;">⚙️ 其他设置</div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border);">
-                <span>自动同步到飞书</span>
-                <label class="switch">
-                    <input type="checkbox" id="auto-sync">
-                    <span class="slider"></span>
-                </label>
-            </div>
-        </div>
-
-        <div class="card disclaimer">
-            <strong>⚠️ 免责声明</strong>
-            <p style="margin-top: 8px;">彩票预测功能仅供参考娱乐，不构成任何投注建议。请理性购彩，量力而行。</p>
-        </div>
-
-        <div class="card">
-            <div class="card-title" style="margin-bottom: 16px;">ℹ️ 关于</div>
-            <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-                <span>版本</span>
-                <span style="color: var(--text-secondary);" id="app-version">1.0.0</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-                <span>作者</span>
-                <span style="color: var(--text-secondary);">大龙虾 🦞</span>
-            </div>
-        </div>
+    <div class="card">
+      <h3>3️⃣ 拍照识别</h3>
+      <p>全屏相机预览 + 取景框覆盖，拍照后模拟 OCR 识别结果确认。</p>
+      <a href="03-camera.html" target="_blank">预览</a>
     </div>
 
-    <nav class="tab-bar">
-        <div class="tab-item active" data-page="home">
-            <i class="bi bi-house"></i>
-            <span>首页</span>
-        </div>
-        <div class="tab-item" data-page="prediction">
-            <i class="bi bi-stars"></i>
-            <span>预测</span>
-        </div>
-        <div class="tab-item" data-page="settings">
-            <i class="bi bi-gear"></i>
-            <span>设置</span>
-        </div>
-    </nav>
-
-    <div id="modal-add" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>添加记录</h3>
-                <button class="modal-close" onclick="UI.closeModal('modal-add')">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="input-group">
-                    <label>期号</label>
-                    <input type="text" id="input-period" placeholder="例如: 2024050">
-                </div>
-                <div class="input-group">
-                    <label>选择红球 (已选 <span id="red-count">0</span>/6)</label>
-                    <div class="number-grid" id="red-ball-selector"></div>
-                </div>
-                <div class="input-group">
-                    <label>选择蓝球 (已选 <span id="blue-count">0</span>/1)</label>
-                    <div class="number-grid" id="blue-ball-selector"></div>
-                </div>
-                <div class="input-group">
-                    <label>备注</label>
-                    <textarea id="input-remarks" rows="2" placeholder="可选"></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="UI.closeModal('modal-add')">取消</button>
-                <button class="btn btn-primary" onclick="App.saveCurrentRecord()">保存</button>
-            </div>
-        </div>
+    <div class="card">
+      <h3>4️⃣ 记录列表</h3>
+      <p>投注记录列表页，支持筛选（类型/中奖状态），展示号码和结果。</p>
+      <a href="04-records.html" target="_blank">预览</a>
     </div>
 
-    <div id="modal-camera" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>📷 拍照识别</h3>
-                <button class="modal-close" onclick="Camera.stop(); UI.closeModal('modal-camera')">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="camera-container">
-                    <video id="camera-preview" autoplay playsinline></video>
-                    <canvas id="camera-canvas" style="display: none;"></canvas>
-                    <div class="camera-overlay"></div>
-                    <div class="camera-controls">
-                        <button class="btn btn-primary" onclick="App.captureAndRecognize()">
-                            <i class="bi bi-camera-fill"></i> 拍照
-                        </button>
-                    </div>
-                </div>
-                <div id="ocr-result" style="display: none;">
-                    <p style="text-align:center; margin-bottom:12px;">识别结果：</p>
-                    <div id="ocr-numbers" class="lottery-balls" style="justify-content:center;"></div>
-                </div>
-            </div>
-        </div>
+    <div class="card">
+      <h3>5️⃣ 记录详情</h3>
+      <p>详细展示投注号码、开奖结果、匹配详情、中奖金额和备注。</p>
+      <a href="05-record-detail.html" target="_blank">预览</a>
     </div>
 
-    <div id="toast" class="toast"></div>
+    <div class="card">
+      <h3>6️⃣ 智能预测</h3>
+      <p>选择彩票类型和推荐组数，配置 AI 模型，生成多组预测号码。</p>
+      <a href="06-prediction.html" target="_blank">预览</a>
+    </div>
 
-    <script src="js/constants.js"></script>
-    <script src="js/storage.js"></script>
-    <script src="js/prediction.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/camera.js"></script>
-    <script src="js/app.js"></script>
+    <div class="card">
+      <h3>7️⃣ 年度统计</h3>
+      <p>统计概览卡片 + 月度趋势图（Canvas 绘制）+ 中奖分布列表。</p>
+      <a href="07-stats.html" target="_blank">预览</a>
+    </div>
+
+    <div class="card">
+      <h3>8️⃣ 设置</h3>
+      <p>模型配置弹窗、通知开关、数据导出、关于等完整设置项。</p>
+      <a href="08-settings.html" target="_blank">预览</a>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>📱 最佳预览方式：</strong><br>
+    • 使用手机浏览器访问（宽度 375px ~ 414px）<br>
+    • 或在 Chrome DevTools 开启移动端模拟（Device Toolbar）<br>
+    • 建议设备：iPhone SE / iPhone 12 / Pixel 5
+  </div>
+
+  <div style="text-align: center; margin-top: 32px; padding: 24px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+    <h2 style="font-size: 18px; margin-bottom: 12px;">🚀 下一步</h2>
+    <p style="color: #646666; font-size: 14px; line-height: 1.8;">
+      原型验证完成后，将进入编码阶段：<br>
+      1. 创建飞书应用（获取 App ID/Secret）<br>
+      2. 搭建 FastAPI 后端（用户认证 + OCR + 预测）<br>
+      3. 开发 Vue 3 + Vant 前端<br>
+      4. 集成百度 OCR 和 AI 大模型<br>
+      5. 部署上线（Vercel + Railway）
+    </p>
+  </div>
 </body>
 </html>

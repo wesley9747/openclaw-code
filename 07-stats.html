@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>彩票智查 - 年度统计</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+      background: #f5f6f7;
+      color: #1d1e20;
+      padding-bottom: 80px;
+    }
+
+    /* 顶部导航 */
+    .navbar {
+      background: white;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .navbar h1 { font-size: 18px; font-weight: 600; }
+    .year-selector {
+      background: #f5f6f7;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 14px;
+      color: #3370ff;
+      cursor: pointer;
+    }
+
+    .content { padding: 16px; }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 统计卡片 */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .mini-stat {
+      text-align: center;
+      padding: 12px;
+      background: #f5f6f7;
+      border-radius: 8px;
+    }
+    .mini-stat .value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #3370ff;
+    }
+    .mini-stat .value.negative { color: #f25340; }
+    .mini-stat .label {
+      font-size: 12px;
+      color: #646666;
+      margin-top: 4px;
+    }
+
+    /* 图表占位 */
+    .chart-container {
+      height: 200px;
+      background: #f5f6f7;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      height: 160px;
+    }
+    .chart-bar {
+      width: 24px;
+      background: #3370ff;
+      border-radius: 4px 4px 0 0;
+      position: relative;
+      transition: height 0.5s ease;
+    }
+    .chart-bar.winning { background: #00b968; }
+    .chart-label {
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: #646666;
+    }
+    .chart-value {
+      position: absolute;
+      top: -22px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: #1d1e20;
+      font-weight: 500;
+    }
+
+    /* 中奖分布 */
+    .prize-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #e3e4e6;
+    }
+    .prize-item:last-child { border-bottom: none; }
+    .prize-name { font-size: 14px; color: #1d1e20; }
+    .prize-count {
+      font-size: 13px;
+      color: #646666;
+    }
+    .prize-count span {
+      font-weight: 600;
+      color: #3370ff;
+      margin: 0 4px;
+    }
+    .prize-amount {
+      font-weight: 600;
+      color: #00b968;
+    }
+
+    /* 按钮 */
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .btn {
+      flex: 1;
+      height: 44px;
+      border: 1px solid #e3e4e6;
+      border-radius: 22px;
+      background: white;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn.primary {
+      background: #3370ff;
+      color: white;
+      border-color: #3370ff;
+    }
+
+    /* 底部导航 */
+    .tabbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+      box-shadow: 0 -1px 4px rgba(0,0,0,0.06);
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      color: #646666;
+      font-size: 10px;
+      gap: 2px;
+    }
+    .tab-item.active { color: #3370ff; }
+    .tab-icon { font-size: 20px; }
+  </style>
+</head>
+<body>
+  <!-- 顶部导航 -->
+  <div class="navbar">
+    <h1>📊 年度统计</h1>
+    <select class="year-selector" onchange="changeYear(this.value)">
+      <option>2024</option>
+      <option>2023</option>
+    </select>
+  </div>
+
+  <div class="content">
+    <!-- 概览 -->
+    <div class="card">
+      <div class="card-title">💰 本年度概览</div>
+      <div class="stats-row">
+        <div class="mini-stat">
+          <div class="value">¥1,240</div>
+          <div class="label">购彩花费</div>
+        </div>
+        <div class="mini-stat">
+          <div class="value">¥340</div>
+          <div class="label">中奖金额</div>
+        </div>
+        <div class="mini-stat">
+          <div class="value negative">-72.6%</div>
+          <div class="label">ROI</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 月度趋势 -->
+    <div class="card">
+      <div class="card-title">📈 月度趋势</div>
+      <div class="chart-container">
+        <div class="chart-bars" id="chartBars">
+          <!-- 动态生成柱状图 -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 中奖分布 -->
+    <div class="card">
+      <div class="card-title">🏆 中奖分布</div>
+      <div class="prize-item">
+        <span class="prize-name">一等奖</span>
+        <span class="prize-count"><span>0</span> 次</span>
+        <span class="prize-amount">¥0</span>
+      </div>
+      <div class="prize-item">
+        <span class="prize-name">二等奖</span>
+        <span class="prize-count"><span>0</span> 次</span>
+        <span class="prize-amount">¥0</span>
+      </div>
+      <div class="prize-item">
+        <span class="prize-name">三等奖</span>
+        <span class="prize-count"><span>1</span> 次</span>
+        <span class="prize-amount">¥300</span>
+      </div>
+      <div class="prize-item">
+        <span class="prize-name">四等奖</span>
+        <span class="prize-count"><span>3</span> 次</span>
+        <span class="prize-amount">¥600</span>
+      </div>
+      <div class="prize-item">
+        <span class="prize-name">五等奖</span>
+        <span class="prize-count"><span>8</span> 次</span>
+        <span class="prize-amount">¥400</span>
+      </div>
+      <div class="prize-item">
+        <span class="prize-name">六等奖</span>
+        <span class="prize-count"><span>12</span> 次</span>
+        <span class="prize-amount">¥60</span>
+      </div>
+    </div>
+
+    <!-- 导出按钮 -->
+    <div class="btn-group">
+      <button class="btn" onclick="exportJson()">
+        📤 导出 JSON
+      </button>
+      <button class="btn" onclick="shareStats()">
+        📋 分享报表
+      </button>
+    </div>
+  </div>
+
+  <!-- 底部导航 -->
+  <div class="tabbar">
+    <a href="#" class="tab-item" onclick="navigateTo('home')">
+      <span class="tab-icon">🏠</span>
+      <span>首页</span>
+    </a>
+    <a href="#" class="tab-item" onclick="navigateTo('camera')">
+      <span class="tab-icon">📸</span>
+      <span>拍照</span>
+    </a>
+    <a href="#" class="tab-item" onclick="navigateTo('records')">
+      <span class="tab-icon">📋</span>
+      <span>记录</span>
+    </a>
+    <a href="#" class="tab-item" onclick="navigateTo('prediction')">
+      <span class="tab-icon">🔮</span>
+      <span>预测</span>
+    </a>
+    <a href="#" class="tab-item active">
+      <span class="tab-icon">📊</span>
+      <span>统计</span>
+    </a>
+  </div>
+
+  <script>
+    // 月度数据
+    const monthlyData = {
+      '2024': [
+        { month: '1月', spent: 120, won: 0 },
+        { month: '2月', spent: 80, won: 50 },
+        { month: '3月', spent: 200, won: 0 },
+        { month: '4月', spent: 300, won: 150 },
+        { month: '5月', spent: 540, won: 140 },
+        { month: '6月', spent: 0, won: 0 },
+      ],
+      '2023': [
+        { month: '1月', spent: 100, won: 10 },
+        { month: '2月', spent: 80, won: 0 },
+        { month: '3月', spent: 120, won: 0 },
+        { month: '4月', spent: 150, won: 200 },
+        { month: '5月', spent: 200, won: 0 },
+        { month: '6月', spent: 100, won: 0 },
+      ]
+    };
+
+    function renderChart(year) {
+      const container = document.getElementById('chartBars');
+      const data = monthlyData[year];
+      const maxValue = Math.max(...data.map(d => d.spent));
+
+      container.innerHTML = data.map(d => {
+        const height = (d.spent / maxValue) * 160;
+        return `
+          <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
+            <div class="chart-bar" style="height: ${height}px; width: 24px;"></div>
+            <div class="chart-label">${d.month}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function changeYear(year) {
+      renderChart(year);
+      alert('切换到 ' + year + ' 年数据\n\n实际应用会重新请求后端统计接口');
+    }
+
+    function exportJson() {
+      alert('导出数据到 Downloads 目录\n\n生成文件: lottery-backup-2024-xx-xx.json');
+    }
+
+    function shareStats() {
+      if (navigator.share) {
+        navigator.share({
+          title: '我的年度彩票统计',
+          text: '今年花费 ¥1,240，中奖 ¥340，ROI -72.6%',
+        });
+      } else {
+        alert('生成分享海报\n\n包含统计图表和二维码');
+      }
+    }
+
+    function navigateTo(page) {
+      alert('导航到: ' + page);
+    }
+
+    // 初始化
+    renderChart('2024');
+  </script>
+</body>
+</html>

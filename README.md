@@ -40,6 +40,27 @@
 
 ---
 
+## 📱 在线预览（GitHub Pages）
+
+**🎉 交互原型已部署！**
+
+**访问地址**：https://wesley9747.github.io/openclaw-code/
+
+**包含页面**：
+- `index.html` - 原型索引总览（推荐先看）
+- `01-login.html` - 登录页
+- `02-home.html` - 首页
+- `03-camera.html` - 拍照识别
+- `04-records.html` - 记录列表
+- `05-record-detail.html` - 记录详情
+- `06-prediction.html` - 智能预测
+- `07-stats.html` - 年度统计
+- `08-settings.html` - 设置页
+
+**最佳体验**：手机访问或 Chrome DevTools 移动端模拟（375px ~ 414px）
+
+---
+
 ## 📁 目录结构
 
 ```
