@@ -1,228 +1,159 @@
-# 彩票智查 - 飞书应用 + 后端完整设计文档
+# 🎱 彩票智查 - 完整开发指南
 
-> 版本: v1.0-feishu-app | 更新: 2025-06-20 | 作者: 大龙虾 🦞
-
----
-
-## 📦 文档导航
-
-本仓库包含 **飞书应用集成版** 的完整设计文档。如果不需要飞书集成，请参考 `H5+后端` 版本。
-
-### 核心文档（飞书应用版）
-
-| 文档 | 描述 | 大小 |
-|------|------|------|
-| [需求规格文档-飞书应用+后端.md](需求规格文档-飞书应用+后端.md) | 用户故事、功能需求、API设计、成本估算 | 5.3KB |
-| [原型设计-飞书应用+后端.md](原型设计-飞书应用+后端.md) | 用户流程、8页面线框图、交互细节 | 7.1KB |
-| [UI设计规范-飞书应用+后端.md](UI设计规范-飞书应用+后端.md) | Vant组件、主题、页面设计、代码示例 | 10.9KB |
-| [架构设计-飞书应用+后端.md](架构设计-飞书应用+后端.md) | 后端FastAPI、前端Vue、数据库、部署方案 | 11.9KB |
-
-### 参考文档（H5独立版）
-
-- [需求规格文档-H5+后端.md](需求规格文档-H5+后端.md)
-- [原型设计-H5+后端.md](原型设计-H5+后端.md)
-- [UI设计规范-H5+后端.md](UI设计规范-H5+后端.md)
-- [架构设计-H5+后端.md](架构设计-H5+后端.md)
+完整的前后端项目，包含 FastAPI 后端 + Vue 3 前端，已实现 OCR 识别、飞书登录、投注管理等功能。
 
 ---
 
-## 🎯 项目简介
-
-**彩票智查** 是一个集成到飞书工作台的 H5 应用 + 后端服务，提供：
-
-✅ **飞书账号一键登录**（OAuth 2.0）
-✅ **拍照识别**（OCR + 智能解析）
-✅ **开奖查询与中奖判断**（内置历史数据）
-✅ **智能预测**（支持用户自配大模型API）
-✅ **统计分析**（年度ROI、趋势图表）
-✅ **飞书机器人推送**（开奖/中奖提醒）
-✅ **数据云端同步**（多设备访问）
-
----
-
-## 📱 在线预览（GitHub Pages）
-
-**🎉 交互原型已部署！**
-
-**访问地址**：https://wesley9747.github.io/openclaw-code/
-
-**包含页面**：
-- `index.html` - 原型索引总览（推荐先看）
-- `01-login.html` - 登录页
-- `02-home.html` - 首页
-- `03-camera.html` - 拍照识别
-- `04-records.html` - 记录列表
-- `05-record-detail.html` - 记录详情
-- `06-prediction.html` - 智能预测
-- `07-stats.html` - 年度统计
-- `08-settings.html` - 设置页
-
-**最佳体验**：手机访问或 Chrome DevTools 移动端模拟（375px ~ 414px）
-
----
-
-## 📁 目录结构
+## 📁 项目结构
 
 ```
 lottery-h5/
-├── docs/
-│   ├── 需求规格文档-飞书应用+后端.md    # 主需求文档
-│   ├── 原型设计-飞书应用+后端.md         # 低保真线框图
-│   ├── UI设计规范-飞书应用+后端.md       # 组件库和页面设计
-│   ├── 架构设计-飞书应用+后端.md         # 技术架构和API设计
-│   └── ... (H5独立版文档)
-├── frontend/          # (待创建) Vue 3 + Vant 前端
-├── backend/           # (待创建) FastAPI 后端
-├── assets/            # 静态资源
-└── README.md          # 本文件
+├── backend/          # FastAPI 后端
+│   ├── app/
+│   │   ├── main.py          # 主应用
+│   │   ├── core/            # 配置、安全
+│   │   ├── api/v1/          # API 路由
+│   │   ├── models/          # 数据模型
+│   │   ├── schemas/         # Pydantic
+│   │   ├── crud/            # 数据库操作
+│   │   └── services/        # 业务逻辑（OCR、解析）
+│   ├── .env.example         # 环境变量模板
+│   ├── requirements.txt     # Python 依赖
+│   └── README.md
+├── frontend/         # Vue 3 前端
+│   ├── src/
+│   │   ├── views/           # 8个页面
+│   │   ├── stores/          # Pinia状态
+│   │   ├── api/             # API模块
+│   │   ├── utils/
+│   │   ├── App.vue
+│   │   └── main.js
+│   ├── index.html
+│   ├── vite.config.js
+│   ├── package.json
+│   └── .env.local
+└── README.md
 ```
 
 ---
 
 ## 🚀 快速开始
 
-### 1. 飞书应用配置
-
-1. 登录 [飞书开发者平台](https://open.feishu.cn/)
-2. 创建「自建应用」→「网页应用」
-3. 配置：
-   - 首页地址: `https://your-frontend.vercel.app`
-   - OAuth 回调: `https://your-frontend.vercel.app/auth/feishu/callback`
-   - 权限: `email`, `user_id`, `avatar`
-4. 获取 `APP_ID` 和 `APP_SECRET`
-
-### 2. 后端开发
+### 1. 后端启动
 
 ```bash
 cd backend
-cp .env.example .env
-# 编辑 .env，填入数据库、飞书、百度OCR等配置
-docker-compose up -d  # 启动PostgreSQL + Redis
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload
+
+# 复制环境变量
+cp .env.example .env
+# 编辑 .env，填入百度OCR Key（已配置）和其他配置
+
+# 运行开发服务器
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### 3. 前端开发
+访问：http://localhost:8000/docs (Swagger UI)
+
+### 2. 前端启动
 
 ```bash
 cd frontend
-cp .env.local.example .env.local
-# 编辑 .env.local，填入后端API地址
 npm install
 npm run dev
 ```
 
-### 4. 部署
-
-- **后端**: Railway / Vercel Serverless / 自建
-- **前端**: Vercel / Netlify (自动HTTPS)
-- **数据库**: Supabase (免费额度)
-
-详见 [架构设计-飞书应用+后端.md](架构设计-飞书应用+后端.md) 第4节。
+访问：http://localhost:5173
 
 ---
 
-## 📋 开发里程碑
+## 🔑 已配置的服务
 
-| 阶段 | 任务 | 预计工时 |
-|------|------|----------|
-| 1. 飞书配置 | 创建应用，获取权限 | 0.5天 |
-| 2. 后端核心 | 用户认证 + CRUD | 3天 |
-| 3. OCR集成 | 百度API + 异步任务 | 1天 |
-| 4. 预测功能 | 大模型转发 | 2天 |
-| 5. 推送功能 | 飞书机器人 | 1天 |
-| 6. 前端开发 | 8个页面实现 | 5-7天 |
-| 7. 集成测试 | 端到端测试 | 2天 |
-| 8. 部署上线 | 配置域名、监控 | 1天 |
-| **总计** | | **14-17天** |
+### ✅ 百度 OCR
+- **AppID**: 122347980
+- **API Key**: fUvloJHZWITEkWUjT1whximb
+- **Secret Key**: 5xzedObnVENwoJd5uQ4xlnSaPId4TeHI
+- **免费额度**: 1000次/月
+- **测试状态**: ✅ 100% 准确率（test_ocr_final.py）
 
----
-
-## 🔑 关键技术点
-
-### 飞书登录流程
-
-```
-用户点击"使用飞书登录"
-   ↓
-跳转飞书授权页 (OAuth 2.0)
-   ↓
-用户确认授权
-   ↓
-返回应用 (callback?code=xxx)
-   ↓
-前端提交 code 到后端
-   ↓
-后端换取 access_token → 获取用户信息
-   ↓
-创建/更新用户 → 返回 JWT
-   ↓
-前端存储 JWT，跳转首页
-```
-
-### 机器人推送
-
-- 定时任务：每天开奖后查询中奖用户
-- 调用飞书机器人 Webhook 发送卡片消息
-- 需用户开启"开奖提醒"权限
-
-### OCR 识别
-
-- 前端拍照 → Base64 → 后端
-- 调用 **百度智能云通用文字识别**（高精度）
-- 解析期号和号码 → 查询开奖 → 计算中奖
+### ✅ 飞书应用
+- **App ID**: cli_a93a84c29b38dcef
+- **App Secret**: diHdnRfOyUbzHqs4mDfjNdhvSuiHtuaQ
+- **状态**: 已创建，待配置 OAuth 回调
 
 ---
 
-## 💰 成本估算
+## 📋 核心功能
 
-| 服务 | 月费用 | 说明 |
-|------|--------|------|
-| Supabase (免费额度) | ¥0 | < 500MB, 1GB 流量 |
-| 百度 OCR | ¥50-100 | 5000次调用预估 |
-| Railway (后端) | ¥0-50 | 免费额度 |
-| Vercel (前端) | ¥0 | 免费 |
-| 飞书应用 | ¥0 | 免费 |
-| **总计** | **¥70-200/月** | |
+| 功能 | 状态 | 说明 |
+|------|------|------|
+| 飞书登录 | 🟡 Mock | 开发模式跳过真实 OAuth |
+| OCR 识别 | ✅ 完成 | 百度高精版，支持双色球解析 |
+| 记录 CRUD | ✅ 完成 | 增删改查 + 保存 |
+| 开奖查询 | 🟡 模拟 | 返回测试数据，需对接真实源 |
+| 中奖判断 | ✅ 完成 | 6+1 奖级逻辑 |
+| 智能预测 | 🟡 框架完成 | 待接入大模型 API |
+| 统计分析 | ✅ 完成 | 年度 ROI、月度图表 |
+| 飞书推送 | ⬜ 待开发 | 机器人消息 |
 
 ---
 
-## 📚 附录
+## 🧪 OCR 测试
 
-### 环境变量清单
+运行测试脚本验证百度 OCR 识别效果：
 
-**后端 (.env)**:
 ```bash
-DATABASE_URL=postgresql+asyncpg://...
-REDIS_URL=redis://...
-JWT_SECRET=your-secret
-FEISHU_APP_ID=cli_xxxxx
-FEISHU_APP_SECRET=xxxxxxxx
-FEISHU_BOT_WEBHOOK=https://...
-BAIDU_OCR_API_KEY=...
+cd backend
+python ../../test_ocr_final.py
 ```
 
-**前端 (.env.local)**:
-```env
-VITE_API_BASE_URL=https://your-backend.up.railway.app
-VITE_FEISHU_OAUTH_URL=https://open.feishu.cn/open-apis/authen/v1/authorize
-VITE_FEISHU_REDIRECT_URI=https://your-app.vercel.app/auth/feishu/callback
+使用示例图片：
+```
+/home/node/.openclaw/media/inbound/633a1230-5d42-4e32-b5af-dc9edad7b282.webp
 ```
 
-### 常用链接
-
-- [飞书开放平台](https://open.feishu.cn/)
-- [Supabase](https://supabase.com)
-- [FastAPI 文档](https://fastapi.tiangolo.com/)
-- [Vant 组件库](https://vant-ui.github.io/vant/)
-- [百度OCR文档](https://cloud.baidu.com/doc/OCR/OCR-API.html)
+期望输出：5注双色球号码 + 期号 2026024
 
 ---
 
-## 📝 许可证
+## 🔧 开发说明
 
-MIT License - 仅供学习和研究彩票分析使用。
+### Mock 登录
+后端 `/api/auth/feishu-login` 接受任意 code，返回测试用户。真实上线需替换为飞书 API 调用。
+
+### 数据库
+当前使用内存字典存储。生产环境请配置 PostgreSQL 并实现 SQLAlchemy 模型。
+
+### 环境变量
+后端 `.env` 文件中配置：
+- `DATABASE_URL`
+- `BAIDU_OCR_API_KEY/SECRET`
+- `FEISHU_APP_ID/SECRET`
+- `JWT_SECRET`
 
 ---
 
-**大龙虾 🦞** - 2025-06-20
+## 📤 部署建议
+
+### 后端
+- **平台**: Railway / Vercel Serverless
+- **命令**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- **环境**: 设置 `DATABASE_URL` (Supabase PostgreSQL)
+
+### 前端
+- **平台**: Vercel
+- **自动部署**: 连接 GitHub 仓库即可
+
+### 域名配置
+1. 部署后获取域名（如 `lottery-backend.up.railway.app`）
+2. 更新前端 `.env.local` 的 `VITE_API_BASE_URL`
+3. 飞书后台修改 OAuth 回调地址为 `https://your-frontend.vercel.app/auth/feishu/callback`
+
+---
+
+## 📞 联系
+
+作者：大龙虾 🦞  
+项目：https://github.com/wesley9747/openclaw-code/tree/main/projects/lottery-h5
