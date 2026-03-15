@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>彩票智查 - 原型预览</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+      background: #f5f6f7;
+      padding: 32px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      font-size: 28px;
+      margin-bottom: 8px;
+      color: #3370ff;
+    }
+    .subtitle {
+      text-align: center;
+      color: #646666;
+      margin-bottom: 32px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .card h3 {
+      font-size: 16px;
+      margin-bottom: 12px;
+      color: #1d1e20;
+    }
+    .card p {
+      font-size: 14px;
+      color: #646666;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+    .card a {
+      display: inline-block;
+      padding: 8px 16px;
+      background: #3370ff;
+      color: white;
+      text-decoration: none;
+      border-radius: 20px;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    .card a:hover { background: #2b5eb3; }
+    .note {
+      background: #fff9e6;
+      border-left: 4px solid #ff991f;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 32px;
+      font-size: 14px;
+      color: #646666;
+    }
+    .note strong { color: #ff991f; }
+  </style>
+</head>
+<body>
+  <h1>🎱 彩票智查</h1>
+  <p class="subtitle">飞书应用 + 后端版 - 交互原型预览</p>
+
+  <div class="note">
+    <strong>🖼️ 原型说明：</strong><br>
+    这里的 8 个 HTML 文件是静态交互原型，展示了完整的用户流程和 UI 设计。<br>
+    每个页面都可以直接在浏览器中打开，体验移动端布局和基础交互。<br>
+    <br>
+    <strong>🔧 技术栈（实际开发）：</strong><br>
+    • 前端：Vue 3 + Vant 4<br>
+    • 后端：FastAPI + PostgreSQL<br>
+    • 认证：飞书 OAuth 2.0<br>
+    • OCR：百度智能云 API<br>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>1️⃣ 登录页</h3>
+      <p>飞书 OAuth 登录授权，简洁的授权入口，配色飞书蓝渐变背景。</p>
+      <a href="01-login.html" target="_blank">预览</a>
+    </div>
+
+    <div class="card">
+      <h3>2️⃣ 首页</h3>
+      <p>年度统计卡片 + 快捷操作按钮 + 最近投注记录列表，底部导航栏。</p>
+      <a href="02-home.html" target="_blank">预览</a>
+    </div>
+
+    <div class="card">
+      <h3>3️⃣ 拍照识别</h3>
+      <p>全屏相机预览 + 取景框覆盖，拍照后模拟 OCR 识别结果确认。</p>
+      <a href="03-camera.html" target="_blank">预览</a>
+    </div>
+
+    <div class="card">
+      <h3>4️⃣ 记录列表</h3>
+      <p>投注记录列表页，支持筛选（类型/中奖状态），展示号码和结果。</p>
+      <a href="04-records.html" target="_blank">预览</a>
+    </div>
+
+    <div class="card">
+      <h3>5️⃣ 记录详情</h3>
+      <p>详细展示投注号码、开奖结果、匹配详情、中奖金额和备注。</p>
+      <a href="05-record-detail.html" target="_blank">预览</a>
+    </div>
+
+    <div class="card">
+      <h3>6️⃣ 智能预测</h3>
+      <p>选择彩票类型和推荐组数，配置 AI 模型，生成多组预测号码。</p>
+      <a href="06-prediction.html" target="_blank">预览</a>
+    </div>
+
+    <div class="card">
+      <h3>7️⃣ 年度统计</h3>
+      <p>统计概览卡片 + 月度趋势图（Canvas 绘制）+ 中奖分布列表。</p>
+      <a href="07-stats.html" target="_blank">预览</a>
+    </div>
+
+    <div class="card">
+      <h3>8️⃣ 设置</h3>
+      <p>模型配置弹窗、通知开关、数据导出、关于等完整设置项。</p>
+      <a href="08-settings.html" target="_blank">预览</a>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>📱 最佳预览方式：</strong><br>
+    • 使用手机浏览器访问（宽度 375px ~ 414px）<br>
+    • 或在 Chrome DevTools 开启移动端模拟（Device Toolbar）<br>
+    • 建议设备：iPhone SE / iPhone 12 / Pixel 5
+  </div>
+
+  <div style="text-align: center; margin-top: 32px; padding: 24px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+    <h2 style="font-size: 18px; margin-bottom: 12px;">🚀 下一步</h2>
+    <p style="color: #646666; font-size: 14px; line-height: 1.8;">
+      原型验证完成后，将进入编码阶段：<br>
+      1. 创建飞书应用（获取 App ID/Secret）<br>
+      2. 搭建 FastAPI 后端（用户认证 + OCR + 预测）<br>
+      3. 开发 Vue 3 + Vant 前端<br>
+      4. 集成百度 OCR 和 AI 大模型<br>
+      5. 部署上线（Vercel + Railway）
+    </p>
+  </div>
+</body>
+</html>

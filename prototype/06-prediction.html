@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>彩票智查 - 智能预测</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+      background: #f5f6f7;
+      color: #1d1e20;
+      padding-bottom: 100px;
+    }
+
+    /* 顶部导航 */
+    .navbar {
+      background: white;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .navbar h1 { font-size: 18px; font-weight: 600; }
+
+    .content { padding: 16px; }
+
+    /* 卡片 */
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 单选组 */
+    .radio-group {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .radio-label {
+      flex: 1;
+      position: relative;
+    }
+    .radio-label input {
+      position: absolute;
+      opacity: 0;
+    }
+    .radio-btn {
+      display: block;
+      text-align: center;
+      padding: 12px;
+      border: 2px solid #e3e4e6;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #646666;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .radio-label input:checked + .radio-btn {
+      border-color: #3370ff;
+      background: rgba(51, 112, 255, 0.05);
+      color: #3370ff;
+    }
+
+    /* 数字输入 */
+    .number-input {
+      margin-bottom: 16px;
+    }
+    .number-input label {
+      display: block;
+      font-size: 14px;
+      color: #646666;
+      margin-bottom: 8px;
+    }
+    .input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .number-input input {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #e3e4e6;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    .range-slider {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 4px;
+      background: #e3e4e6;
+      border-radius: 2px;
+      outline: none;
+    }
+    .range-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #3370ff;
+      cursor: pointer;
+    }
+    .number-value {
+      font-size: 18px;
+      font-weight: 600;
+      color: #3370ff;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    /* 配置信息 */
+    .config-info {
+      padding: 12px;
+      background: #f5f6f7;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #646666;
+    }
+    .config-info .provider { color: #3370ff; font-weight: 500; }
+
+    /* 大按钮 */
+    .btn-generate {
+      width: 100%;
+      height: 52px;
+      border: none;
+      border-radius: 26px;
+      background: linear-gradient(135deg, #3370ff, #5b8cff);
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(51, 112, 255, 0.3);
+      transition: transform 0.2s;
+      margin-top: 16px;
+    }
+    .btn-generate:active { transform: scale(0.98); }
+    .btn-generate:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* 结果列表 */
+    .results {
+      margin-top: 16px;
+    }
+    .result-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .result-title {
+      font-weight: 600;
+      color: #3370ff;
+    }
+    .reason-tag {
+      font-size: 12px;
+      background: rgba(51, 112, 255, 0.1);
+      color: #3370ff;
+      padding: 4px 10px;
+      border-radius: 10px;
+    }
+    .result-actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+    }
+    .btn-sm {
+      flex: 1;
+      height: 36px;
+      border: 1px solid #e3e4e6;
+      border-radius: 18px;
+      background: white;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn-sm.primary {
+      background: #3370ff;
+      color: white;
+      border-color: #3370ff;
+    }
+
+    /* 加载状态 */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #646666;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #e3e4e6;
+      border-top-color: #3370ff;
+      border-radius: 50%;
+      margin: 0 auto 12px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* 底部导航 */
+    .tabbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+      box-shadow: 0 -1px 4px rgba(0,0,0,0.06);
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      color: #646666;
+      font-size: 10px;
+      gap: 2px;
+    }
+    .tab-item.active { color: #3370ff; }
+    .tab-icon { font-size: 20px; }
+  </style>
+</head>
+<body>
+  <!-- 顶部导航 -->
+  <div class="navbar">
+    <button class="back-btn" style="display: none;" onclick="goBack()">←</button>
+    <h1>🔮 智能预测</h1>
+  </div>
+
+  <div class="content">
+    <div class="card">
+      <div class="card-title">⚙️ 预测设置</div>
+
+      <div class="radio-group">
+        <label class="radio-label">
+          <input type="radio" name="lotteryType" value="ssq" checked onchange="updateConfig()">
+          <span class="radio-btn">双色球</span>
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="lotteryType" value="dlt" onchange="updateConfig()">
+          <span class="radio-btn">大乐透</span>
+        </label>
+      </div>
+
+      <div class="number-input">
+        <label>推荐组数 (1-10)</label>
+        <div class="input-wrapper">
+          <input type="range" min="1" max="10" value="5" class="range-slider" id="countSlider" oninput="updateCount()">
+          <span class="number-value" id="countValue">5</span>
+        </div>
+      </div>
+
+      <div class="config-info" id="configInfo">
+        📤 提供商：<span class="provider">通义千问</span><br>
+        🤖 模型：qwen-max<br>
+        🔗 API：https://dashscope.aliyuncs.com/compatible-mode/v1
+      </div>
+
+      <button class="btn-generate" id="generateBtn" onclick="generate()">
+        🔮 生成推荐
+      </button>
+    </div>
+
+    <!-- 加载状态 -->
+    <div class="loading" id="loading" style="display: none;">
+      <div class="spinner"></div>
+      <div>AI正在思考中...</div>
+      <div style="font-size: 12px; margin-top: 8px;">预计 10-30 秒</div>
+    </div>
+
+    <!-- 结果列表 -->
+    <div class="results" id="results"></div>
+  </div>
+
+  <!-- 底部导航 -->
+  <div class="tabbar">
+    <a href="#" class="tab-item" onclick="navigateTo('home')">
+      <span class="tab-icon">🏠</span>
+      <span>首页</span>
+    </a>
+    <a href="#" class="tab-item" onclick="navigateTo('camera')">
+      <span class="tab-icon">📸</span>
+      <span>拍照</span>
+    </a>
+    <a href="#" class="tab-item" onclick="navigateTo('records')">
+      <span class="tab-icon">📋</span>
+      <span>记录</span>
+    </a>
+    <a href="#" class="tab-item active">
+      <span class="tab-icon">🔮</span>
+      <span>预测</span>
+    </a>
+    <a href="#" class="tab-item" onclick="navigateTo('stats')">
+      <span class="tab-icon">📊</span>
+      <span>统计</span>
+    </a>
+  </div>
+
+  <script>
+    const lotteryType = 'ssq';
+    let count = 5;
+
+    function updateCount() {
+      count = document.getElementById('countSlider').value;
+      document.getElementById('countValue').textContent = count;
+    }
+
+    function updateConfig() {
+      const type = document.querySelector('input[name="lotteryType"]:checked').value;
+      if (type === 'ssq') {
+        document.getElementById('configInfo').innerHTML = `
+          📤 提供商：<span class="provider">通义千问</span><br>
+          🤖 模型：qwen-max<br>
+          🔗 API：https://dashscope.aliyuncs.com/compatible-mode/v1
+        `;
+      } else {
+        document.getElementById('configInfo').innerHTML = `
+          📤 提供商：<span class="provider">ChatGPT</span><br>
+          🤖 模型：gpt-4<br>
+          🔗 API：https://api.openai.com/v1
+        `;
+      }
+    }
+
+    function generate() {
+      const btn = document.getElementById('generateBtn');
+      const loading = document.getElementById('loading');
+      const results = document.getElementById('results');
+
+      btn.disabled = true;
+      loading.style.display = 'block';
+      results.innerHTML = '';
+
+      // 模拟AI预测（实际调用后端）
+      setTimeout(() => {
+        loading.style.display = 'none';
+        btn.disabled = false;
+
+        // 生成模拟结果
+        const type = document.querySelector('input[name="lotteryType"]:checked').value;
+        const strategies = ['热门号码组合', '冷热号平衡', '奇偶分布优化', '邻号策略', '余数筛选法', '随机幸运组合'];
+        let html = '';
+
+        for (let i = 0; i < count; i++) {
+          const strategy = strategies[i % strategies.length];
+          const redBalls = generateRandomNumbers(6, 1, 33);
+          const blueBall = type === 'ssq' ? Math.floor(Math.random() * 16) + 1 : null;
+          const frontBalls = type === 'dlt' ? generateRandomNumbers(5, 1, 35) : null;
+          const backBalls = type === 'dlt' ? generateRandomNumbers(2, 1, 12) : null;
+
+          html += `<div class="result-card">
+            <div class="result-header">
+              <span class="result-title">方案 ${i + 1}</span>
+              <span class="reason-tag">${strategy}</span>
+            </div>
+            <div class="numbers-row">
+              ${redBalls.map(n => `<span class="ball red">${n.toString().padStart(2, '0')}</span>`).join('')}
+              ${type === 'ssq' ? `<span class="ball blue">${blueBall.toString().padStart(2, '0')}</span>` : ''}
+              ${type === 'dlt' ? frontBalls.map(n => `<span class="ball red">${n.toString().padStart(2, '0')}</span>`).join('') : ''}
+              ${type === 'dlt' ? '<span style="width:4px"></span>' : ''}
+              ${type === 'dlt' ? backBalls.map(n => `<span class="ball blue">${n.toString().padStart(2, '0')}</span>`).join('') : ''}
+            </div>
+            <div class="result-actions">
+              <button class="btn-sm" onclick="savePrediction(${i})">💾 保存</button>
+              <button class="btn-sm primary" onclick="sharePrediction(${i})">📤 分享</button>
+            </div>
+          </div>`;
+        }
+
+        results.innerHTML = html;
+      }, 2000);
+    }
+
+    function generateRandomNumbers(count, min, max) {
+      const nums = new Set();
+      while (nums.size < count) {
+        nums.add(Math.floor(Math.random() * (max - min + 1)) + min);
+      }
+      return Array.from(nums).sort((a, b) => a - b);
+    }
+
+    function savePrediction(index) {
+      alert(`方案${index + 1} 已保存到投注记录`);
+    }
+
+    function sharePrediction(index) {
+      alert(`分享方案${index + 1}\n\n生成海报或通过飞书分享给好友`);
+    }
+
+    function navigateTo(page) {
+      alert('导航到: ' + page);
+    }
+
+    function goBack() {
+      alert('返回上一页');
+    }
+  </script>
+</body>
+</html>

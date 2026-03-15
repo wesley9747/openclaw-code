@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>彩票智查 - 设置</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+      background: #f5f6f7;
+      color: #1d1e20;
+      padding-bottom: 80px;
+    }
+
+    /* 顶部导航 */
+    .navbar {
+      background: white;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .back-btn {
+      font-size: 24px;
+      color: #1d1e20;
+      background: none;
+      border: none;
+      padding: 0;
+      margin-right: 12px;
+      cursor: pointer;
+    }
+    .navbar h1 { font-size: 18px; font-weight: 600; }
+
+    .content { padding: 16px; }
+
+    .section {
+      background: white;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .section-title {
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #969799;
+      background: #f5f6f7;
+    }
+
+    .setting-item {
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      border-bottom: 1px solid #f5f6f7;
+    }
+    .setting-item:last-child { border-bottom: none; }
+    .item-label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 15px;
+    }
+    .item-icon {
+      font-size: 20px;
+      width: 24px;
+      text-align: center;
+    }
+    .item-desc {
+      font-size: 12px;
+      color: #969799;
+      margin-top: 2px;
+    }
+
+    /* 开关 */
+    .switch {
+      position: relative;
+      width: 48px;
+      height: 28px;
+      background: #e3e4e6;
+      border-radius: 14px;
+      transition: background 0.3s;
+    }
+    .switch.on { background: #3370ff; }
+    .switch-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 24px;
+      height: 24px;
+      background: white;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: transform 0.3s;
+    }
+    .switch.on .switch-thumb { transform: translateX(20px); }
+
+    /* 箭头 */
+    .arrow { color: #c8c9cc; font-size: 18px; }
+
+    /* 版本号 */
+    .version-info {
+      text-align: center;
+      padding: 32px;
+      color: #969799;
+      font-size: 13px;
+    }
+    .version-info .version {
+      font-size: 16px;
+      color: #646666;
+      margin-top: 4px;
+    }
+
+    /* 底部导航 */
+    .tabbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+      box-shadow: 0 -1px 4px rgba(0,0,0,0.06);
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      color: #646666;
+      font-size: 10px;
+      gap: 2px;
+    }
+    .tab-item.active { color: #3370ff; }
+    .tab-icon { font-size: 20px; }
+
+    /* 模型配置弹窗 */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 400px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid #e3e4e6;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-title { font-size: 18px; font-weight: 600; }
+    .modal-close {
+      font-size: 24px;
+      color: #969799;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+    .modal-body { padding: 20px; }
+    .modal-footer {
+      padding: 16px 20px;
+      border-top: 1px solid #e3e4e6;
+      display: flex;
+      gap: 12px;
+    }
+    .modal-btn {
+      flex: 1;
+      height: 44px;
+      border: none;
+      border-radius: 22px;
+      font-size: 16px;
+    }
+    .modal-btn.cancel { background: #f5f6f7; color: #646666; }
+    .modal-btn.save { background: #3370ff; color: white; }
+
+    .form-field { margin-bottom: 16px; }
+    .form-field label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #646666;
+    }
+    .form-field input, .form-field select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e3e4e6;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .form-field input:focus, .form-field select:focus {
+      outline: none;
+      border-color: #3370ff;
+    }
+  </style>
+</head>
+<body>
+  <!-- 顶部导航 -->
+  <div class="navbar">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <h1>⚙️ 设置</h1>
+  </div>
+
+  <div class="content">
+    <!-- 模型配置 -->
+    <div class="section">
+      <div class="section-title">🤖 模型配置</div>
+      <div class="setting-item" onclick="openConfig('ssq')">
+        <div class="item-label">
+          <span class="item-icon">🎱</span>
+          <div>
+            <div>双色球预测模型</div>
+            <div class="item-desc">通义千问 qwen-max</div>
+          </div>
+        </div>
+        <span class="arrow">›</span>
+      </div>
+      <div class="setting-item" onclick="openConfig('dlt')">
+        <div class="item-label">
+          <span class="item-icon">🎯</span>
+          <div>
+            <div>大乐透预测模型</div>
+            <div class="item-desc">ChatGPT gpt-4</div>
+          </div>
+        </div>
+        <span class="arrow">›</span>
+      </div>
+      <div class="setting-item" onclick="addConfig()">
+        <div class="item-label">
+          <span class="item-icon">➕</span>
+          <div>添加新彩票类型</div>
+        </div>
+        <span class="arrow">›</span>
+      </div>
+    </div>
+
+    <!-- 通知设置 -->
+    <div class="section">
+      <div class="section-title">🔔 通知设置</div>
+      <div class="setting-item" onclick="toggleSwitch(this)">
+        <div class="item-label">
+          <span class="item-icon">📢</span>
+          <div>开奖提醒</div>
+        </div>
+        <div class="switch on"><div class="switch-thumb"></div></div>
+      </div>
+      <div class="setting-item" onclick="toggleSwitch(this)">
+        <div class="item-label">
+          <span class="item-icon">🎉</span>
+          <div>中奖提醒</div>
+        </div>
+        <div class="switch on"><div class="switch-thumb"></div></div>
+      </div>
+    </div>
+
+    <!-- 数据管理 -->
+    <div class="section">
+      <div class="section-title">📤 数据管理</div>
+      <div class="setting-item" onclick="exportData()">
+        <div class="item-label">
+          <span class="item-icon">📥</span>
+          <div>导出 JSON</div>
+        </div>
+        <span class="arrow">›</span>
+      </div>
+      <div class="setting-item" onclick="importData()">
+        <div class="item-label">
+          <span class="item-icon">📤</span>
+          <div>导入数据</div>
+        </div>
+        <span class="arrow">›</span>
+      </div>
+      <div class="setting-item" onclick="clearData()">
+        <div class="item-label">
+          <span class="item-icon">🗑️</span>
+          <div style="color: #f25340;">清空所有记录</div>
+        </div>
+        <span class="arrow">›</span>
+      </div>
+    </div>
+
+    <!-- 关于 -->
+    <div class="section">
+      <div class="section-title">ℹ️ 关于</div>
+      <div class="setting-item" onclick="checkUpdate()">
+        <div class="item-label">
+          <span class="item-icon">🔄</span>
+          <div>检查更新</div>
+        </div>
+        <span class="arrow">›</span>
+      </div>
+      <div class="setting-item" onclick="showAbout()">
+        <div class="item-label">
+          <span class="item-icon">📄</span>
+          <div>关于应用</div>
+        </div>
+        <span class="arrow">›</span>
+      </div>
+    </div>
+
+    <div class="version-info">
+      <div class="version">版本 1.0.0</div>
+      <div style="margin-top: 8px;">Powered by 大龙虾 🦞</div>
+    </div>
+  </div>
+
+  <!-- 底部导航 -->
+  <div class="tabbar">
+    <a href="#" class="tab-item" onclick="navigateTo('home')">
+      <span class="tab-icon">🏠</span>
+      <span>首页</span>
+    </a>
+    <a href="#" class="tab-item" onclick="navigateTo('camera')">
+      <span class="tab-icon">📸</span>
+      <span>拍照</span>
+    </a>
+    <a href="#" class="tab-item" onclick="navigateTo('records')">
+      <span class="tab-icon">📋</span>
+      <span>记录</span>
+    </a>
+    <a href="#" class="tab-item" onclick="navigateTo('prediction')">
+      <span class="tab-icon">🔮</span>
+      <span>预测</span>
+    </a>
+    <a href="#" class="tab-item active">
+      <span class="tab-icon">⚙️</span>
+      <span>设置</span>
+    </a>
+  </div>
+
+  <!-- 模型配置弹窗 -->
+  <div class="modal-overlay" id="configModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">模型配置</div>
+        <button class="modal-close" onclick="closeConfig()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-field">
+          <label>彩票类型</label>
+          <select id="configType">
+            <option value="ssq">双色球</option>
+            <option value="dlt">大乐透</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>提供商</label>
+          <select id="configProvider">
+            <option value="qwen">通义千问</option>
+            <option value="openai">OpenAI</option>
+            <option value="deepseek">DeepSeek</option>
+            <option value="local">本地 Ollama</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>API 地址</label>
+          <input type="text" id="configUrl" placeholder="https://...">
+        </div>
+        <div class="form-field">
+          <label>模型 ID</label>
+          <input type="text" id="configModel" placeholder="qwen-max">
+        </div>
+        <div class="form-field">
+          <label>API Key</label>
+          <input type="password" id="configKey" placeholder="sk-...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn cancel" onclick="closeConfig()">取消</button>
+        <button class="modal-btn save" onclick="saveConfig()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function goBack() {
+      alert('返回上一页');
+    }
+
+    function toggleSwitch(el) {
+      const switchEl = el.querySelector('.switch');
+      switchEl.classList.toggle('on');
+      const isOn = switchEl.classList.contains('on');
+      alert(isOn ? '已开启' : '已关闭');
+    }
+
+    function openConfig(type) {
+      document.getElementById('configModal').classList.add('show');
+      document.getElementById('configType').value = type;
+    }
+
+    function closeConfig() {
+      document.getElementById('configModal').classList.remove('show');
+    }
+
+    function saveConfig() {
+      const type = document.getElementById('configType').value;
+      const provider = document.getElementById('configProvider').value;
+      alert(`${type} 模型配置已保存\n\n提供商: ${provider}\nAPI Key 已加密存储`);
+      closeConfig();
+    }
+
+    function addConfig() {
+      alert('添加新彩票类型\n\n支持自定义彩票格式配置（需后端支持）');
+    }
+
+    function exportData() {
+      alert('导出数据到 Downloads 目录\n\n文件格式: lottery-backup-YYYY-MM-DD.json');
+    }
+
+    function importData() {
+      alert('从文件导入数据\n\n请选择 JSON 文件');
+    }
+
+    function clearData() {
+      if (confirm('⚠️ 确定清空所有记录吗？此操作不可恢复！')) {
+        if (confirm('再次确认：真的要清空吗？')) {
+          alert('所有记录已清空');
+        }
+      }
+    }
+
+    function checkUpdate() {
+      alert('当前已是最新版本 v1.0.0');
+    }
+
+    function showAbout() {
+      alert('彩票智查 v1.0.0\n\n智能彩票管理与预测平台\n\n作者: 大龙虾 🦞\n技术栈: Vue 3 + FastAPI + PostgreSQL');
+    }
+
+    function navigateTo(page) {
+      alert('导航到: ' + page);
+    }
+  </script>
+</body>
+</html>

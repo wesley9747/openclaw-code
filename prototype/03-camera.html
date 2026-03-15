@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>彩票智查 - 拍照识别</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+      background: #000;
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 顶部导航 */
+    .navbar {
+      background: rgba(0,0,0,0.5);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .back-btn {
+      font-size: 24px;
+      color: white;
+      background: none;
+      border: none;
+      padding: 0;
+      margin-right: 16px;
+      cursor: pointer;
+    }
+    .navbar h1 { font-size: 18px; font-weight: 500; }
+
+    /* 预览区域 */
+    .preview-area {
+      flex: 1;
+      position: relative;
+      background: #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .placeholder {
+      text-align: center;
+      color: #666;
+    }
+    .placeholder .icon { font-size: 64px; margin-bottom: 16px; }
+
+    /* 取景框覆盖 */
+    .overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .frame {
+      width: 80%;
+      height: 60%;
+      border: 2px dashed rgba(255,255,255,0.6);
+      border-radius: 8px;
+    }
+    .overlay .hint {
+      color: white;
+      margin-top: 16px;
+      background: rgba(0,0,0,0.6);
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+    }
+
+    /* 控制按钮 */
+    .controls {
+      padding: 24px;
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      background: rgba(0,0,0,0.8);
+    }
+    .btn {
+      height: 48px;
+      padding: 0 32px;
+      border: none;
+      border-radius: 24px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .btn:active { transform: scale(0.95); }
+    .btn-primary {
+      background: white;
+      color: #000;
+    }
+    .btn-secondary {
+      background: #333;
+      color: white;
+    }
+
+    /* 识别结果确认弹窗 */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: #1d1e20;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 400px;
+      padding: 24px;
+    }
+    .modal h2 { font-size: 18px; margin-bottom: 16px; text-align: center; }
+    .modal .confirm-numbers {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+    .modal .ball {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .modal .ball.red { background: linear-gradient(135deg, #ff6b6b, #ee5253); }
+    .modal .ball.blue { background: linear-gradient(135deg, #3370ff, #2b5eb3); }
+    .modal .field {
+      margin-bottom: 16px;
+    }
+    .modal label {
+      display: block;
+      margin-bottom: 8px;
+      color: #969799;
+      font-size: 14px;
+    }
+    .modal input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e3e4e6;
+      border-radius: 8px;
+      background: #2a2a2a;
+      color: white;
+      font-size: 16px;
+    }
+    .modal .buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .modal .btn {
+      flex: 1;
+      height: 44px;
+      border: none;
+      border-radius: 22px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .modal .btn-cancel { background: #333; color: white; }
+    .modal .btn-confirm { background: #3370ff; color: white; }
+
+    /* Loading 遮罩 */
+    .loading-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 300;
+    }
+    .loading-overlay.show { display: flex; }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(255,255,255,0.2);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text {
+      margin-top: 16px;
+      font-size: 14px;
+      color: rgba(255,255,255,0.8);
+    }
+  </style>
+</head>
+<body>
+  <!-- 顶部导航 -->
+  <div class="navbar">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <h1>拍照识别</h1>
+  </div>
+
+  <!-- 预览区域 -->
+  <div class="preview-area">
+    <div class="placeholder" id="placeholder">
+      <div class="icon">📷</div>
+      <p>点击拍照或选择相册</p>
+    </div>
+    <!-- 实际应用中这里会是 <video> 或 <canvas> -->
+    <div class="overlay">
+      <div class="frame"></div>
+      <div class="hint">将彩票放在框内</div>
+    </div>
+  </div>
+
+  <!-- 控制按钮 -->
+  <div class="controls">
+    <button class="btn btn-primary" onclick="takePhoto()">📸 拍照</button>
+    <button class="btn btn-secondary" onclick="chooseFromAlbum()">🖼️ 相册</button>
+  </div>
+
+  <!-- 识别结果弹窗 -->
+  <div class="modal-overlay" id="resultModal">
+    <div class="modal">
+      <h2>识别结果</h2>
+      <div class="confirm-numbers" id="confirmNumbers">
+        <!-- 动态生成 -->
+      </div>
+      <div class="field">
+        <label>期号</label>
+        <input type="text" id="periodInput" value="2024050">
+      </div>
+      <div class="buttons">
+        <button class="btn btn-cancel" onclick="retry()">重新识别</button>
+        <button class="btn btn-confirm" onclick="confirmAndSave()">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading 遮罩 -->
+  <div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">识别中...</div>
+  </div>
+
+  <script>
+    // 模拟识别结果
+    const mockResult = {
+      period: '2024050',
+      redBalls: [3, 8, 15, 22, 27, 31],
+      blueBall: 14
+    };
+
+    function takePhoto() {
+      showLoading();
+      // 模拟拍照和OCR处理
+      setTimeout(() => {
+        hideLoading();
+        showResult(mockResult);
+      }, 2000);
+    }
+
+    function chooseFromAlbum() {
+      alert('在实际应用中，这里会调用文件选择器或飞书 chooseImage API');
+    }
+
+    function showResult(result) {
+      const container = document.getElementById('confirmNumbers');
+      container.innerHTML = '';
+
+      result.redBalls.forEach(num => {
+        const ball = document.createElement('span');
+        ball.className = 'ball red';
+        ball.textContent = num.toString().padStart(2, '0');
+        container.appendChild(ball);
+      });
+
+      const blue = document.createElement('span');
+      blue.className = 'ball blue';
+      blue.textContent = result.blueBall.toString().padStart(2, '0');
+      container.appendChild(blue);
+
+      document.getElementById('periodInput').value = result.period;
+      document.getElementById('resultModal').classList.add('show');
+    }
+
+    function retry() {
+      document.getElementById('resultModal').classList.remove('show');
+    }
+
+    function confirmAndSave() {
+      document.getElementById('resultModal').classList.remove('show');
+      alert('保存成功！\n\n记录已保存，正在查询开奖结果...\n（实际应用中会调用后端 API）');
+      goBack();
+    }
+
+    function showLoading() {
+      document.getElementById('loading').classList.add('show');
+    }
+
+    function hideLoading() {
+      document.getElementById('loading').classList.remove('show');
+    }
+
+    function goBack() {
+      alert('返回首页');
+      // history.back();
+    }
+  </script>
+</body>
+</html>
