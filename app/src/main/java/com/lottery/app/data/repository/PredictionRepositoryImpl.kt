@@ -12,11 +12,6 @@ import kotlin.random.Random
 @Singleton
 class PredictionRepositoryImpl @Inject constructor() : PredictionRepository {
 
-    override suspend fun predictWithAI(historyDraws: List<DrawResult>): Result<PredictionResult> {
-        // 通过浏览器调用千问网页版 - 在 Presentation 层实现
-        return Result.failure(NotImplementedError("Use PredictionUseCase with Browser"))
-    }
-
     override suspend fun predictWithLocalAlgorithm(historyDraws: List<DrawResult>): PredictionResult {
         if (historyDraws.isEmpty()) {
             return generateRandomPrediction()

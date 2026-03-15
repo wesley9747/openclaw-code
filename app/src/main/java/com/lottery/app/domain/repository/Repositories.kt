@@ -26,23 +26,15 @@ interface DrawRepository {
     suspend fun getLatestDraw(): DrawResult?
     suspend fun getDrawByPeriod(period: String): DrawResult?
     suspend fun getRecentDraws(count: Int): List<DrawResult>
-    suspend fun syncDrawsFromNetwork(): Result<Int>
-}
-
-/**
- * 飞书同步仓库接口
- */
-interface FeishuRepository {
-    suspend fun syncToFeishu(records: List<LotteryRecord>): Result<Int>
-    suspend fun syncFromFeishu(): Result<List<LotteryRecord>>
-    suspend fun checkConnection(): Boolean
+    suspend fun insertDraw(draw: DrawResult)
+    suspend fun insertAllDraws(draws: List<DrawResult>)
+    suspend fun getDrawCount(): Int
 }
 
 /**
  * 预测服务接口
  */
 interface PredictionRepository {
-    suspend fun predictWithAI(historyDraws: List<DrawResult>): Result<PredictionResult>
     suspend fun predictWithLocalAlgorithm(historyDraws: List<DrawResult>): PredictionResult
     fun getHotColdStatistics(draws: List<DrawResult>): HotColdStatistics
 }
